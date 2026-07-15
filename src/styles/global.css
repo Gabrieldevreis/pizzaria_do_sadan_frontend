@@ -151,6 +151,14 @@ body {
     white-space: nowrap;
   }
 
+  .pedido-badge-pago {
+    background: #2ed573;
+  }
+
+  .pedido-badge-pendente {
+    background: #ffa502;
+  }
+
   .btn-copiar {
     background: #fff;
     color: #333;
@@ -200,6 +208,15 @@ body {
     color: #2ed573;
   }
 
+  .pedido-observacao {
+    grid-column: 1 / -1;
+  }
+
+  .pedido-observacao dd {
+    font-weight: 500;
+    white-space: pre-wrap;
+  }
+
   .pedido-itens {
     list-style: none;
     margin: 0;
@@ -245,14 +262,25 @@ body {
   }
 
   .campo input[type='text'],
-  .campo input[type='number'] {
+  .campo input[type='number'],
+  .campo select,
+  .campo textarea {
     padding: 10px 12px;
     border: 1px solid #ddd;
     border-radius: 6px;
     font-size: 15px;
+    font-family: inherit;
+    background: #fff;
   }
 
-  .campo input:focus {
+  .campo textarea {
+    resize: vertical;
+    min-height: 72px;
+  }
+
+  .campo input:focus,
+  .campo select:focus,
+  .campo textarea:focus {
     outline: none;
     border-color: #ff4757;
   }
