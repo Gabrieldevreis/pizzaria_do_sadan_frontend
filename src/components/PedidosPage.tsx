@@ -1,9 +1,21 @@
 import { useState } from 'react';
-import type { Pedido } from '../types.ts';
+import type { FormaPagamento, Pedido, SituacaoPagamento } from '../types.ts';
 
 interface PedidosPageProps {
   pedidos: Pedido[];
 }
+
+const labelsFormaPagamento: Record<FormaPagamento, string> = {
+  dinheiro: 'Dinheiro',
+  pix: 'PIX',
+  credito: 'Cartão de crédito',
+  debito: 'Cartão de débito',
+};
+
+const labelsSituacaoPagamento: Record<SituacaoPagamento, string> = {
+  pendente: 'Pendente',
+  pago: 'Pago',
+};
 
 function formatarData(dataIso: string): string {
   return new Date(dataIso).toLocaleString('pt-BR', {
@@ -23,16 +35,23 @@ function formatarPedidoParaCopia(pedido: Pedido): string {
     .map((item) => `- ${item.nome}: R$ ${item.preco.toFixed(2)}`)
     .join('\n');
 
-  return [
+  const linhas = [
     `Pedido #${pedido.id}`,
     `Data: ${formatarData(pedido.data)}`,
     `Nome: ${pedido.nome}`,
     `Valor: R$ ${pedido.valor.toFixed(2)}`,
     `${pedido.tipoEntrega === 'mesa' ? 'Mesa' : 'Entrega'}: ${entrega}`,
-    '',
-    'Itens:',
-    itens,
-  ].join('\n');
+    `Forma de pagamento: ${labelsFormaPagamento[pedido.formaPagamento]}`,
+    `Situação do pagamento: ${labelsSituacaoPagamento[pedido.situacaoPagamento]}`,
+  ];
+
+  if (pedido.observacao) {
+    linhas.push(`Observação: ${pedido.observacao}`);
+  }
+
+  linhas.push('', 'Itens:', itens);
+
+  return linhas.join('\n');
 }
 
 export default function PedidosPage({ pedidos }: PedidosPageProps) {
@@ -87,6 +106,15 @@ export default function PedidosPage({ pedidos }: PedidosPageProps) {
                   ? `Mesa ${pedido.mesa}`
                   : 'Retirada'}
               </span>
+              <span
+                className={`pedido-badge ${
+                  pedido.situacaoPagamento === 'pago'
+                    ? 'pedido-badge-pago'
+                    : 'pedido-badge-pendente'
+                }`}
+              >
+                {labelsSituacaoPagamento[pedido.situacaoPagamento]}
+              </span>
               <button
                 type="button"
                 className={`btn-copiar ${pedidoCopiadoId === pedido.id ? 'copiado' : ''}`}
@@ -118,6 +146,20 @@ export default function PedidosPage({ pedidos }: PedidosPageProps) {
                   : 'Retirada'}
               </dd>
             </div>
+            <div>
+              <dt>Pagamento</dt>
+              <dd>{labelsFormaPagamento[pedido.formaPagamento]}</dd>
+            </div>
+            <div>
+              <dt>Situação</dt>
+              <dd>{labelsSituacaoPagamento[pedido.situacaoPagamento]}</dd>
+            </div>
+            {pedido.observacao && (
+              <div className="pedido-observacao">
+                <dt>Observação</dt>
+                <dd>{pedido.observacao}</dd>
+              </div>
+            )}
           </dl>
 
           <ul className="pedido-itens">
