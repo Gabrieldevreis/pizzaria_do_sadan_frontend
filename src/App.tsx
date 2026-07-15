@@ -2,7 +2,20 @@ import { useState } from 'react';
 import './styles/global.css';
 import Sidebar, { type Pagina } from './components/Sidebar.tsx';
 import PedidosPage from './components/PedidosPage.tsx';
-import type { Pedido, Produto, TipoEntrega } from './types.ts';
+import type {
+  FormaPagamento,
+  Pedido,
+  Produto,
+  SituacaoPagamento,
+  TipoEntrega,
+} from './types.ts';
+
+const labelsFormaPagamento: Record<FormaPagamento, string> = {
+  dinheiro: 'Dinheiro',
+  pix: 'PIX',
+  credito: 'Cartão de crédito',
+  debito: 'Cartão de débito',
+};
 
 const cardapio: Produto[] = [
   { id: 1, nome: "Vegetariana Especial", categoria: "salgada", preco: 67.00, descricao: "Muçarela, Abobrinha, Brócolis, Tomate seco, Cream cheese e Orégano" },
@@ -71,6 +84,9 @@ export default function App() {
   const [nomeCliente, setNomeCliente] = useState('');
   const [tipoEntrega, setTipoEntrega] = useState<TipoEntrega>('mesa');
   const [numeroMesa, setNumeroMesa] = useState('');
+  const [observacao, setObservacao] = useState('');
+  const [formaPagamento, setFormaPagamento] = useState<FormaPagamento>('pix');
+  const [situacaoPagamento, setSituacaoPagamento] = useState<SituacaoPagamento>('pendente');
 
   const produtosFiltrados = categoriaAtiva === 'todas'
     ? cardapio
@@ -92,6 +108,9 @@ export default function App() {
     setNomeCliente('');
     setTipoEntrega('mesa');
     setNumeroMesa('');
+    setObservacao('');
+    setFormaPagamento('pix');
+    setSituacaoPagamento('pendente');
   };
 
   const iniciarFinalizacao = () => {
@@ -107,6 +126,8 @@ export default function App() {
       if (!numeroMesa || Number.isNaN(mesa) || mesa <= 0) return;
     }
 
+    const observacaoTrim = observacao.trim();
+
     const novoPedido: Pedido = {
       id: pedidos.length + 1,
       data: new Date().toISOString(),
@@ -114,6 +135,9 @@ export default function App() {
       valor: totalCarrinho,
       tipoEntrega,
       mesa: tipoEntrega === 'mesa' ? Number(numeroMesa) : undefined,
+      observacao: observacaoTrim || undefined,
+      formaPagamento,
+      situacaoPagamento,
       itens: [...carrinho],
     };
 
@@ -325,6 +349,59 @@ export default function App() {
                       />
                     </label>
                   )}
+
+                  <label className="campo">
+                    <span>Observação</span>
+                    <textarea
+                      value={observacao}
+                      onChange={(e) => setObservacao(e.target.value)}
+                      placeholder="Ex: sem cebola, troco para R$ 100..."
+                      rows={3}
+                    />
+                  </label>
+
+                  <label className="campo">
+                    <span>Forma de pagamento</span>
+                    <select
+                      value={formaPagamento}
+                      onChange={(e) =>
+                        setFormaPagamento(e.target.value as FormaPagamento)
+                      }
+                      required
+                    >
+                      {(Object.keys(labelsFormaPagamento) as FormaPagamento[]).map(
+                        (forma) => (
+                          <option key={forma} value={forma}>
+                            {labelsFormaPagamento[forma]}
+                          </option>
+                        ),
+                      )}
+                    </select>
+                  </label>
+
+                  <fieldset className="campo">
+                    <legend>Situação do pagamento</legend>
+                    <div className="opcoes-entrega">
+                      <label className="opcao-entrega">
+                        <input
+                          type="radio"
+                          name="situacaoPagamento"
+                          checked={situacaoPagamento === 'pendente'}
+                          onChange={() => setSituacaoPagamento('pendente')}
+                        />
+                        Pendente
+                      </label>
+                      <label className="opcao-entrega">
+                        <input
+                          type="radio"
+                          name="situacaoPagamento"
+                          checked={situacaoPagamento === 'pago'}
+                          onChange={() => setSituacaoPagamento('pago')}
+                        />
+                        Pago
+                      </label>
+                    </div>
+                  </fieldset>
 
                   <div className="resumo-finalizacao">
                     <span>Valor total</span>
