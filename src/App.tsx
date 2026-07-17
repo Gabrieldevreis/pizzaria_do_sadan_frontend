@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import './styles/global.css';
 import Sidebar, { type Pagina } from './components/Sidebar.tsx';
 import PedidosPage from './components/PedidosPage.tsx';
@@ -181,11 +181,23 @@ const titulosPagina: Record<Pagina, string> = {
   pedido: 'Pedido',
 };
 
+const CHAVE_PEDIDOS = 'pizzaria_do_sadan:pedidos';
+
+const carregarPedidos = (): Pedido[] => {
+  if (typeof window === 'undefined') return [];
+  try {
+    const salvo = window.localStorage.getItem(CHAVE_PEDIDOS);
+    return salvo ? (JSON.parse(salvo) as Pedido[]) : [];
+  } catch {
+    return [];
+  }
+};
+
 export default function App() {
   const [paginaAtiva, setPaginaAtiva] = useState<Pagina>('cardapio');
   const [categoriaAtiva, setCategoriaAtiva] = useState<'todas' | 'salgada' | 'doce' | 'bebida' | 'fogaca' | 'esfirra'>('todas');
   const [carrinho, setCarrinho] = useState<Produto[]>([]);
-  const [pedidos, setPedidos] = useState<Pedido[]>([]);
+  const [pedidos, setPedidos] = useState<Pedido[]>(carregarPedidos);
   const [modalAberto, setModalAberto] = useState(false);
   const [etapaFinalizacao, setEtapaFinalizacao] = useState(false);
   const [menuAberto, setMenuAberto] = useState(false);
@@ -195,6 +207,14 @@ export default function App() {
   const [observacao, setObservacao] = useState('');
   const [formaPagamento, setFormaPagamento] = useState<FormaPagamento>('pix');
   const [situacaoPagamento, setSituacaoPagamento] = useState<SituacaoPagamento>('pendente');
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(CHAVE_PEDIDOS, JSON.stringify(pedidos));
+    } catch {
+      // Ignora falhas de escrita (ex: modo privado ou armazenamento cheio)
+    }
+  }, [pedidos]);
 
   const produtosFiltrados = categoriaAtiva === 'todas'
     ? cardapio
@@ -236,8 +256,10 @@ export default function App() {
 
     const observacaoTrim = observacao.trim();
 
+    const proximoId = pedidos.reduce((maior, p) => Math.max(maior, p.id), 0) + 1;
+
     const novoPedido: Pedido = {
-      id: pedidos.length + 1,
+      id: proximoId,
       data: new Date().toISOString(),
       nome,
       valor: totalCarrinho,
